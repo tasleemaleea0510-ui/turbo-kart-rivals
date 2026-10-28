@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Environment, Lightformer, Sky } from "@react-three/drei";
+import * as THREE from "three";
 import { Track } from "./Track";
 import { Player } from "./Player";
 import { Remotes } from "./Remotes";
@@ -33,10 +34,10 @@ export function Game({ room }: { room: string }) {
 
   return (
     <div className="fixed inset-0 bg-sky">
-      <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 6, -10], fov: 62, near: 0.1, far: 700 }} onCreated={() => setReady(true)}>
-        <fog attach="fog" args={["#bfe3f5", 80, 320]} />
-        <Sky sunPosition={[80, 60, 40]} turbidity={4} rayleigh={0.8} />
-        <hemisphereLight args={["#dff3ff", "#6cb04a", 0.6]} />
+      <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 6, -10], fov: 62, near: 0.1, far: 700 }} gl={{ toneMapping: THREE.NeutralToneMapping, toneMappingExposure: 1.15 }} onCreated={() => setReady(true)}>
+        <fog attach="fog" args={["#a9dcff", 110, 380]} />
+        <Sky sunPosition={[80, 60, 40]} turbidity={2} rayleigh={0.5} mieCoefficient={0.003} />
+        <hemisphereLight args={["#e6f6ff", "#5fd14a", 0.9]} />
         <directionalLight
           position={[60, 80, 30]}
           intensity={2.2}

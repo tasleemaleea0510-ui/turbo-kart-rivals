@@ -2,7 +2,8 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
-import { N, ROAD_W, leftAt, samples, tangents, trackLength } from "./track";
+import { N, ROAD_W, WALL, leftAt, S, T, trackLength } from "./track";
+import { Barriers, Scenery } from "./Scenery";
 
 function canvasTex(w: number, h: number, draw: (c: CanvasRenderingContext2D) => void, repeat?: [number, number]) {
   const cv = document.createElement("canvas");
@@ -21,7 +22,7 @@ function noise(c: CanvasRenderingContext2D, w: number, h: number, base: string, 
   c.fillStyle = base;
   c.fillRect(0, 0, w, h);
   for (let i = 0; i < n; i++) {
-    c.fillStyle = specks[i % specks.length];
+    c.fillStyle = specks[i % specks.length]!;
     c.fillRect(Math.random() * w, Math.random() * h, size, size);
   }
 }
@@ -32,7 +33,7 @@ function ribbon(inner: number, outer: number, y: number, vScale: number) {
   const idx: number[] = [];
   for (let i = 0; i <= N; i++) {
     const k = i % N;
-    const p = samples[k];
+    const p = S(k);
     const l = leftAt(k);
     const v = (i / N) * vScale;
     pos.push(p.x + l.x * outer, y, p.z + l.z * outer, p.x + l.x * inner, y, p.z + l.z * inner);
@@ -56,16 +57,16 @@ function ribbon(inner: number, outer: number, y: number, vScale: number) {
 /** Item box and boost pad placement (shared with the player logic). */
 export const ITEM_BOXES = [120, 330, 560].flatMap((i) =>
   [-4, 0, 4].map((o) => {
-    const p = samples[i];
+    const p = S(i);
     const l = leftAt(i);
     return new THREE.Vector3(p.x + l.x * o, 1.2, p.z + l.z * o);
   }),
 );
 export const BOOST_PADS = [60, 250, 470, 690].map((i, n) => {
-  const p = samples[i];
+  const p = S(i);
   const l = leftAt(i);
   const o = n % 2 ? 3.5 : -3.5;
-  const t = tangents[i];
+  const t = T(i);
   return { pos: new THREE.Vector3(p.x + l.x * o, 0.04, p.z + l.z * o), ry: Math.atan2(t.x, t.z) };
 });
 export const boxCooldown = ITEM_BOXES.map(() => 0);
@@ -84,8 +85,8 @@ function Trees() {
       const z = (rnd() - 0.5) * 360 + 70;
       let ok = true;
       for (let i = 0; i < N; i += 4) {
-        const p = samples[i];
-        if ((p.x - x) ** 2 + (p.z - z) ** 2 < (ROAD_W + 9) ** 2) { ok = false; break; }
+        const p = S(i);
+        if ((p.x - x) ** 2 + (p.z - z) ** 2 < (WALL + 4) ** 2) { ok = false; break; }
       }
       if (ok) out.push({ x, z, s: 0.8 + rnd() * 0.9 });
     }
@@ -126,12 +127,12 @@ function ItemBoxes() {
     const now = performance.now();
     refs.current.forEach((g, i) => {
       if (!g) return;
-      const cd = boxCooldown[i];
+      const cd = boxCooldown[i] ?? 0;
       const target = cd > now ? 0.001 : 1;
       const s = g.scale.x + (target - g.scale.x) * 0.15;
       g.scale.setScalar(s);
       g.rotation.set(t * 0.7 + i, t * 1.1 + i, 0);
-      g.position.y = ITEM_BOXES[i].y + Math.sin(t * 2 + i) * 0.2;
+      g.position.y = ITEM_BOXES[i]!.y + Math.sin(t * 2 + i) * 0.2;
       const m = (g.children[0] as THREE.Mesh).material as THREE.MeshStandardMaterial;
       m.color.setHSL((t * 0.25 + i * 0.1) % 1, 0.85, 0.6);
       m.emissive.setHSL((t * 0.25 + i * 0.1) % 1, 0.9, 0.25);
@@ -165,7 +166,7 @@ function BoostPads({ tex }: { tex: THREE.Texture }) {
       {BOOST_PADS.map((b, i) => (
         <mesh key={i} position={b.pos} rotation={[-Math.PI / 2, 0, b.ry + Math.PI]}>
           <planeGeometry args={[3.2, 5]} />
-          <meshBasicMaterial ref={i === 0 ? mat : undefined} map={tex} transparent />
+          {i === 0 ? <meshBasicMaterial ref={mat} map={tex} transparent /> : <meshBasicMaterial map={tex} transparent />}
         </mesh>
       ))}
     </>
@@ -177,7 +178,7 @@ function Cones() {
   const items = useMemo(
     () =>
       [40, 100, 200, 300, 380, 440, 520, 620, 700, 760].map((i, n) => {
-        const p = samples[i];
+        const p = S(i);
         const l = leftAt(i);
         const o = (ROAD_W + 2.6) * (n % 2 ? 1 : -1);
         const c = scene.clone(true);
@@ -194,18 +195,18 @@ function Cones() {
 export function Track() {
   const tex = useMemo(() => {
     const asphalt = canvasTex(256, 256, (c) => {
-      noise(c, 256, 256, "#4a4e57", ["#3d4048", "#5a5f69", "#444851"], 9000, 2);
+      noise(c, 256, 256, "#52566a", ["#464a5c", "#61667a", "#4b4f62"], 9000, 2);
       c.fillStyle = "#f4f1e6";
       for (let y = 0; y < 256; y += 64) c.fillRect(124, y, 8, 34);
     }, [1, trackLength / 18]);
     const curb = canvasTex(64, 64, (c) => {
-      c.fillStyle = "#e8402f";
+      c.fillStyle = "#ff3b3b";
       c.fillRect(0, 0, 64, 32);
       c.fillStyle = "#f7f4ee";
       c.fillRect(0, 32, 64, 32);
     }, [1, trackLength / 3]);
     const grass = canvasTex(512, 512, (c) => {
-      noise(c, 512, 512, "#6cb04a", ["#5ea13f", "#7cc057", "#58963b", "#88c964"], 22000, 3);
+      noise(c, 512, 512, "#5fd14a", ["#4fc13d", "#78e05c", "#52b83e", "#8eea6e", "#f7f08a"], 22000, 3);
     }, [60, 60]);
     const checker = canvasTex(128, 32, (c) => {
       for (let x = 0; x < 16; x++)
@@ -233,8 +234,8 @@ export function Track() {
   const curbL = useMemo(() => ribbon(ROAD_W, ROAD_W + 1.3, 0.03, 1), []);
   const curbR = useMemo(() => ribbon(-ROAD_W - 1.3, -ROAD_W, 0.03, 1), []);
 
-  const start = samples[0];
-  const startRy = Math.atan2(tangents[0].x, tangents[0].z);
+  const start = S(0);
+  const startRy = Math.atan2(T(0).x, T(0).z);
 
   return (
     <group>
@@ -274,6 +275,8 @@ export function Track() {
       <ItemBoxes />
       <Cones />
       <Trees />
+      <Barriers />
+      <Scenery />
     </group>
   );
 }

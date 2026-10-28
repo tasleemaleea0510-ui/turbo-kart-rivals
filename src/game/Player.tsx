@@ -3,7 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { KartModel, newRig } from "./KartModel";
 import { BOOST_PADS, ITEM_BOXES, boxCooldown } from "./Track";
-import { LAPS, N, ROAD_W, gridSlot, lapProgress, nearest, samples } from "./track";
+import { LAPS, N, ROAD_W, gridSlot, lapProgress, nearest, S, yawAt, WALL } from "./track";
 import { game } from "./store";
 import { beep, setEngine } from "./audio";
 
@@ -28,7 +28,7 @@ export function Player({ localRef }: { localRef: React.MutableRefObject<{ x: num
   const st = useRef({
     x: 0, z: 0, ry: 0, speed: 0, idx: N - 6, half: true,
     driftDir: 0, driftCharge: 0, driftHeld: false, hopT: 0, boost: 0,
-    itemHeld: false, token: -1, lastBeep: 4, camYaw: 0,
+    itemHeld: false, lastHit: 0, token: -1, lastBeep: 4, camYaw: 0,
   });
 
   const reset = () => {
@@ -126,19 +126,35 @@ export function Player({ localRef }: { localRef: React.MutableRefObject<{ x: num
       turn *= 1 - Math.min(0.35, Math.abs(s.speed) / 90);
     }
     s.ry += turn * dt;
+    // No turning around: keep the nose within ~80° of the track direction
+    {
+      const ty = yawAt(s.idx);
+      const diff = Math.atan2(Math.sin(s.ry - ty), Math.cos(s.ry - ty));
+      const LIMIT = 1.4;
+      if (Math.abs(diff) > LIMIT) s.ry = ty + Math.sign(diff) * LIMIT;
+    }
 
     const moveYaw = s.ry - s.driftDir * DRIFT_SLIP;
     s.x += Math.sin(moveYaw) * s.speed * dt;
     s.z += Math.cos(moveYaw) * s.speed * dt;
 
-    // Invisible walls far off track
+    // Solid barrier walls along both sides of the track
     const n2 = nearest(s.x, s.z, near.i);
-    if (n2.d > ROAD_W + 7) {
-      const p = samples[n2.i];
-      const f = (ROAD_W + 7) / n2.d;
+    const LIM = WALL - 0.9;
+    if (n2.d > LIM) {
+      const p = S(n2.i);
+      const f = (LIM - 0.05) / n2.d;
       s.x = p.x + (s.x - p.x) * f;
       s.z = p.z + (s.z - p.z) * f;
-      s.speed *= Math.exp(-4 * dt);
+      if (now - s.lastHit > 250) {
+        s.speed *= 0.6;
+        s.lastHit = now;
+        beep(120, 0.12, "square", 0.08);
+      }
+      // glance off: steer nose back along the track
+      const ty = yawAt(n2.i);
+      const d = Math.atan2(Math.sin(ty - s.ry), Math.cos(ty - s.ry));
+      s.ry += d * (1 - Math.exp(-6 * dt));
     }
 
     // Bump other karts
@@ -161,7 +177,7 @@ export function Player({ localRef }: { localRef: React.MutableRefObject<{ x: num
       }
     }
     ITEM_BOXES.forEach((b, i) => {
-      if (boxCooldown[i] > now) return;
+      if ((boxCooldown[i] ?? 0) > now) return;
       if ((b.x - s.x) ** 2 + (b.z - s.z) ** 2 < 3.6) {
         boxCooldown[i] = now + 3000;
         if (!game.item) {
