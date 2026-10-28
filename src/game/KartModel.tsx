@@ -86,7 +86,7 @@ export function KartModel({ kind, rig }: { kind: string; rig: React.MutableRefOb
       s.visible = showSpark;
       if (!showSpark) return;
       const m = s.material as THREE.MeshBasicMaterial;
-      m.color.set(SPARK_COLORS[r.driftLevel]);
+      m.color.set(SPARK_COLORS[r.driftLevel] ?? "#ffffff");
       const f = 0.6 + Math.abs(Math.sin(t * 40 + i * 2)) * 0.7 + r.driftLevel * 0.3;
       s.scale.setScalar(f);
       s.rotation.z = t * 25 * (i ? 1 : -1);

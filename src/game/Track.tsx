@@ -2,7 +2,7 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
-import { N, ROAD_W, leftAt, S, T, samples, trackLength } from "./track";
+import { N, ROAD_W, leftAt, S, T, trackLength } from "./track";
 
 function canvasTex(w: number, h: number, draw: (c: CanvasRenderingContext2D) => void, repeat?: [number, number]) {
   const cv = document.createElement("canvas");
@@ -21,7 +21,7 @@ function noise(c: CanvasRenderingContext2D, w: number, h: number, base: string, 
   c.fillStyle = base;
   c.fillRect(0, 0, w, h);
   for (let i = 0; i < n; i++) {
-    c.fillStyle = specks[i % specks.length];
+    c.fillStyle = specks[i % specks.length]!;
     c.fillRect(Math.random() * w, Math.random() * h, size, size);
   }
 }
@@ -126,12 +126,12 @@ function ItemBoxes() {
     const now = performance.now();
     refs.current.forEach((g, i) => {
       if (!g) return;
-      const cd = boxCooldown[i];
+      const cd = boxCooldown[i] ?? 0;
       const target = cd > now ? 0.001 : 1;
       const s = g.scale.x + (target - g.scale.x) * 0.15;
       g.scale.setScalar(s);
       g.rotation.set(t * 0.7 + i, t * 1.1 + i, 0);
-      g.position.y = ITEM_BOXES[i].y + Math.sin(t * 2 + i) * 0.2;
+      g.position.y = ITEM_BOXES[i]!.y + Math.sin(t * 2 + i) * 0.2;
       const m = (g.children[0] as THREE.Mesh).material as THREE.MeshStandardMaterial;
       m.color.setHSL((t * 0.25 + i * 0.1) % 1, 0.85, 0.6);
       m.emissive.setHSL((t * 0.25 + i * 0.1) % 1, 0.9, 0.25);
@@ -165,7 +165,7 @@ function BoostPads({ tex }: { tex: THREE.Texture }) {
       {BOOST_PADS.map((b, i) => (
         <mesh key={i} position={b.pos} rotation={[-Math.PI / 2, 0, b.ry + Math.PI]}>
           <planeGeometry args={[3.2, 5]} />
-          <meshBasicMaterial ref={i === 0 ? mat : undefined} map={tex} transparent />
+          {i === 0 ? <meshBasicMaterial ref={mat} map={tex} transparent /> : <meshBasicMaterial map={tex} transparent />}
         </mesh>
       ))}
     </>

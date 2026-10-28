@@ -161,7 +161,7 @@ export function Player({ localRef }: { localRef: React.MutableRefObject<{ x: num
       }
     }
     ITEM_BOXES.forEach((b, i) => {
-      if (boxCooldown[i] > now) return;
+      if ((boxCooldown[i] ?? 0) > now) return;
       if ((b.x - s.x) ** 2 + (b.z - s.z) ** 2 < 3.6) {
         boxCooldown[i] = now + 3000;
         if (!game.item) {
