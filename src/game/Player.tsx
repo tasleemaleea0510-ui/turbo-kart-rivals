@@ -3,7 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { KartModel, newRig } from "./KartModel";
 import { BOOST_PADS, ITEM_BOXES, boxCooldown } from "./Track";
-import { LAPS, N, ROAD_W, gridSlot, lapProgress, nearest, samples } from "./track";
+import { LAPS, N, ROAD_W, gridSlot, lapProgress, nearest, S, yawAt } from "./track";
 import { game } from "./store";
 import { beep, setEngine } from "./audio";
 

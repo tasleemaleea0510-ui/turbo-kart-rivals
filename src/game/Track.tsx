@@ -2,7 +2,7 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
-import { N, ROAD_W, leftAt, samples, tangents, trackLength } from "./track";
+import { N, ROAD_W, leftAt, S, T, samples, trackLength } from "./track";
 
 function canvasTex(w: number, h: number, draw: (c: CanvasRenderingContext2D) => void, repeat?: [number, number]) {
   const cv = document.createElement("canvas");

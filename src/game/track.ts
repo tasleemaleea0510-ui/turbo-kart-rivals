@@ -17,6 +17,10 @@ export const LAPS = 3;
 export const samples = curve.getSpacedPoints(N).slice(0, N);
 export const tangents = samples.map((_, i) => curve.getTangentAt(i / N));
 export const trackLength = curve.getLength();
+export const S = (i: number) => samples[((i % N) + N) % N]!;
+export const T = (i: number) => tangents[((i % N) + N) % N]!;
+/** Track heading (yaw) at sample i. */
+export const yawAt = (i: number) => Math.atan2(T(i).x, T(i).z);
 
 /** Nearest sample index to (x,z). Windowed search around `hint` when given. */
 export function nearest(x: number, z: number, hint = -1) {
