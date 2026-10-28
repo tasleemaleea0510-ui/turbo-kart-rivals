@@ -134,7 +134,7 @@ export function Player({ localRef }: { localRef: React.MutableRefObject<{ x: num
     // Invisible walls far off track
     const n2 = nearest(s.x, s.z, near.i);
     if (n2.d > ROAD_W + 7) {
-      const p = samples[n2.i];
+      const p = S(n2.i);
       const f = (ROAD_W + 7) / n2.d;
       s.x = p.x + (s.x - p.x) * f;
       s.z = p.z + (s.z - p.z) * f;

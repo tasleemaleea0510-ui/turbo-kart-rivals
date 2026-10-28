@@ -32,7 +32,7 @@ function ribbon(inner: number, outer: number, y: number, vScale: number) {
   const idx: number[] = [];
   for (let i = 0; i <= N; i++) {
     const k = i % N;
-    const p = samples[k];
+    const p = S(k);
     const l = leftAt(k);
     const v = (i / N) * vScale;
     pos.push(p.x + l.x * outer, y, p.z + l.z * outer, p.x + l.x * inner, y, p.z + l.z * inner);
@@ -56,16 +56,16 @@ function ribbon(inner: number, outer: number, y: number, vScale: number) {
 /** Item box and boost pad placement (shared with the player logic). */
 export const ITEM_BOXES = [120, 330, 560].flatMap((i) =>
   [-4, 0, 4].map((o) => {
-    const p = samples[i];
+    const p = S(i);
     const l = leftAt(i);
     return new THREE.Vector3(p.x + l.x * o, 1.2, p.z + l.z * o);
   }),
 );
 export const BOOST_PADS = [60, 250, 470, 690].map((i, n) => {
-  const p = samples[i];
+  const p = S(i);
   const l = leftAt(i);
   const o = n % 2 ? 3.5 : -3.5;
-  const t = tangents[i];
+  const t = T(i);
   return { pos: new THREE.Vector3(p.x + l.x * o, 0.04, p.z + l.z * o), ry: Math.atan2(t.x, t.z) };
 });
 export const boxCooldown = ITEM_BOXES.map(() => 0);
@@ -84,7 +84,7 @@ function Trees() {
       const z = (rnd() - 0.5) * 360 + 70;
       let ok = true;
       for (let i = 0; i < N; i += 4) {
-        const p = samples[i];
+        const p = S(i);
         if ((p.x - x) ** 2 + (p.z - z) ** 2 < (ROAD_W + 9) ** 2) { ok = false; break; }
       }
       if (ok) out.push({ x, z, s: 0.8 + rnd() * 0.9 });
@@ -177,7 +177,7 @@ function Cones() {
   const items = useMemo(
     () =>
       [40, 100, 200, 300, 380, 440, 520, 620, 700, 760].map((i, n) => {
-        const p = samples[i];
+        const p = S(i);
         const l = leftAt(i);
         const o = (ROAD_W + 2.6) * (n % 2 ? 1 : -1);
         const c = scene.clone(true);
@@ -233,8 +233,8 @@ export function Track() {
   const curbL = useMemo(() => ribbon(ROAD_W, ROAD_W + 1.3, 0.03, 1), []);
   const curbR = useMemo(() => ribbon(-ROAD_W - 1.3, -ROAD_W, 0.03, 1), []);
 
-  const start = samples[0];
-  const startRy = Math.atan2(tangents[0].x, tangents[0].z);
+  const start = S(0);
+  const startRy = Math.atan2(T(0).x, T(0).z);
 
   return (
     <group>

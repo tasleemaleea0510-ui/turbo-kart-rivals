@@ -26,7 +26,7 @@ export function nearest(x: number, z: number, hint = -1) {
   const to = hint < 0 ? N : hint + 40;
   for (let k = from; k < to; k++) {
     const i = ((k % N) + N) % N;
-    const p = samples[i];
+    const p = S(i);
     const d = (p.x - x) ** 2 + (p.z - z) ** 2;
     if (d < bd) {
       bd = d;
@@ -38,7 +38,7 @@ export function nearest(x: number, z: number, hint = -1) {
 
 /** Left-pointing unit vector at sample i. */
 export function leftAt(i: number) {
-  const t = tangents[i];
+  const t = T(i);
   return new THREE.Vector3(t.z, 0, -t.x).normalize();
 }
 
@@ -47,9 +47,9 @@ export function gridSlot(slot: number) {
   const row = Math.floor(slot / 2);
   const col = slot % 2 === 0 ? 1 : -1;
   const i = N - 6 - row * 7;
-  const p = samples[i];
+  const p = S(i);
   const l = leftAt(i);
-  const t = tangents[i];
+  const t = T(i);
   return {
     x: p.x + l.x * col * 3.2,
     z: p.z + l.z * col * 3.2,
