@@ -2,7 +2,8 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
-import { N, ROAD_W, leftAt, S, T, trackLength } from "./track";
+import { N, ROAD_W, WALL, leftAt, S, T, trackLength } from "./track";
+import { Barriers, Scenery } from "./Scenery";
 
 function canvasTex(w: number, h: number, draw: (c: CanvasRenderingContext2D) => void, repeat?: [number, number]) {
   const cv = document.createElement("canvas");
@@ -85,7 +86,7 @@ function Trees() {
       let ok = true;
       for (let i = 0; i < N; i += 4) {
         const p = S(i);
-        if ((p.x - x) ** 2 + (p.z - z) ** 2 < (ROAD_W + 9) ** 2) { ok = false; break; }
+        if ((p.x - x) ** 2 + (p.z - z) ** 2 < (WALL + 4) ** 2) { ok = false; break; }
       }
       if (ok) out.push({ x, z, s: 0.8 + rnd() * 0.9 });
     }
@@ -194,18 +195,18 @@ function Cones() {
 export function Track() {
   const tex = useMemo(() => {
     const asphalt = canvasTex(256, 256, (c) => {
-      noise(c, 256, 256, "#4a4e57", ["#3d4048", "#5a5f69", "#444851"], 9000, 2);
+      noise(c, 256, 256, "#52566a", ["#464a5c", "#61667a", "#4b4f62"], 9000, 2);
       c.fillStyle = "#f4f1e6";
       for (let y = 0; y < 256; y += 64) c.fillRect(124, y, 8, 34);
     }, [1, trackLength / 18]);
     const curb = canvasTex(64, 64, (c) => {
-      c.fillStyle = "#e8402f";
+      c.fillStyle = "#ff3b3b";
       c.fillRect(0, 0, 64, 32);
       c.fillStyle = "#f7f4ee";
       c.fillRect(0, 32, 64, 32);
     }, [1, trackLength / 3]);
     const grass = canvasTex(512, 512, (c) => {
-      noise(c, 512, 512, "#6cb04a", ["#5ea13f", "#7cc057", "#58963b", "#88c964"], 22000, 3);
+      noise(c, 512, 512, "#5fd14a", ["#4fc13d", "#78e05c", "#52b83e", "#8eea6e", "#f7f08a"], 22000, 3);
     }, [60, 60]);
     const checker = canvasTex(128, 32, (c) => {
       for (let x = 0; x < 16; x++)
@@ -274,6 +275,8 @@ export function Track() {
       <ItemBoxes />
       <Cones />
       <Trees />
+      <Barriers />
+      <Scenery />
     </group>
   );
 }

@@ -14,6 +14,8 @@ export const curve = new THREE.CatmullRomCurve3(
 export const N = 800;
 export const ROAD_W = 8; // half width
 export const LAPS = 3;
+/** Distance from centre line to the barrier wall. */
+export const WALL = ROAD_W + 4.5;
 export const samples = curve.getSpacedPoints(N).slice(0, N);
 export const tangents = samples.map((_, i) => curve.getTangentAt(i / N));
 export const trackLength = curve.getLength();
