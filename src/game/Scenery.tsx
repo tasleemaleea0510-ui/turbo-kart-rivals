@@ -87,7 +87,6 @@ function Flags() {
             <meshStandardMaterial color="#f2f2f2" metalness={0.4} roughness={0.3} />
           </mesh>
           <mesh ref={(m) => { refs.current[i] = m; }} position={[0, 4.4, 0]}>
-            <group />
             <boxGeometry args={[0.05, 0.9, 1.5]} />
             <meshStandardMaterial color={f.c} roughness={0.6} />
           </mesh>
